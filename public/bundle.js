@@ -60,7 +60,7 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	__webpack_require__(357);
+	__webpack_require__(362);
 
 	_reactDom2.default.render(_react2.default.createElement(_Layout2.default, null), document.getElementById('App'));
 
@@ -34236,7 +34236,7 @@
 
 	var _socket2 = _interopRequireDefault(_socket);
 
-	var _reactPlayer = __webpack_require__(346);
+	var _reactPlayer = __webpack_require__(351);
 
 	var _reactPlayer2 = _interopRequireDefault(_reactPlayer);
 
@@ -44342,7 +44342,12 @@
 	exports.default = Queue;
 
 /***/ },
-/* 346 */
+/* 346 */,
+/* 347 */,
+/* 348 */,
+/* 349 */,
+/* 350 */,
+/* 351 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -44359,29 +44364,29 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _props3 = __webpack_require__(347);
+	var _props3 = __webpack_require__(352);
 
-	var _YouTube = __webpack_require__(348);
+	var _YouTube = __webpack_require__(353);
 
 	var _YouTube2 = _interopRequireDefault(_YouTube);
 
-	var _SoundCloud = __webpack_require__(351);
+	var _SoundCloud = __webpack_require__(356);
 
 	var _SoundCloud2 = _interopRequireDefault(_SoundCloud);
 
-	var _Vimeo = __webpack_require__(354);
+	var _Vimeo = __webpack_require__(359);
 
 	var _Vimeo2 = _interopRequireDefault(_Vimeo);
 
-	var _FilePlayer = __webpack_require__(353);
+	var _FilePlayer = __webpack_require__(358);
 
 	var _FilePlayer2 = _interopRequireDefault(_FilePlayer);
 
-	var _Streamable = __webpack_require__(355);
+	var _Streamable = __webpack_require__(360);
 
 	var _Streamable2 = _interopRequireDefault(_Streamable);
 
-	var _Vidme = __webpack_require__(356);
+	var _Vidme = __webpack_require__(361);
 
 	var _Vidme2 = _interopRequireDefault(_Vidme);
 
@@ -44531,7 +44536,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 347 */
+/* 352 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -44624,7 +44629,7 @@
 	};
 
 /***/ },
-/* 348 */
+/* 353 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -44647,11 +44652,11 @@
 
 	var _loadScript2 = _interopRequireDefault(_loadScript);
 
-	var _Base2 = __webpack_require__(349);
+	var _Base2 = __webpack_require__(354);
 
 	var _Base3 = _interopRequireDefault(_Base2);
 
-	var _utils = __webpack_require__(350);
+	var _utils = __webpack_require__(355);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -44873,7 +44878,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 349 */
+/* 354 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -44886,7 +44891,7 @@
 
 	var _react = __webpack_require__(1);
 
-	var _props2 = __webpack_require__(347);
+	var _props2 = __webpack_require__(352);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -45026,7 +45031,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 350 */
+/* 355 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -45078,7 +45083,7 @@
 	}
 
 /***/ },
-/* 351 */
+/* 356 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -45095,15 +45100,15 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _fetchJsonp = __webpack_require__(352);
+	var _fetchJsonp = __webpack_require__(357);
 
 	var _fetchJsonp2 = _interopRequireDefault(_fetchJsonp);
 
-	var _FilePlayer2 = __webpack_require__(353);
+	var _FilePlayer2 = __webpack_require__(358);
 
 	var _FilePlayer3 = _interopRequireDefault(_FilePlayer2);
 
-	var _props3 = __webpack_require__(347);
+	var _props3 = __webpack_require__(352);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -45230,7 +45235,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 352 */
+/* 357 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
@@ -45343,7 +45348,7 @@
 	});
 
 /***/ },
-/* 353 */
+/* 358 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -45362,7 +45367,7 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _Base2 = __webpack_require__(349);
+	var _Base2 = __webpack_require__(354);
 
 	var _Base3 = _interopRequireDefault(_Base2);
 
@@ -45519,7 +45524,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 354 */
+/* 359 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -45540,7 +45545,7 @@
 
 	var _queryString = __webpack_require__(206);
 
-	var _Base2 = __webpack_require__(349);
+	var _Base2 = __webpack_require__(354);
 
 	var _Base3 = _interopRequireDefault(_Base2);
 
@@ -45727,7 +45732,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 355 */
+/* 360 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -45738,7 +45743,7 @@
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _FilePlayer2 = __webpack_require__(353);
+	var _FilePlayer2 = __webpack_require__(358);
 
 	var _FilePlayer3 = _interopRequireDefault(_FilePlayer2);
 
@@ -45810,7 +45815,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 356 */
+/* 361 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -45821,7 +45826,7 @@
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-	var _FilePlayer2 = __webpack_require__(353);
+	var _FilePlayer2 = __webpack_require__(358);
 
 	var _FilePlayer3 = _interopRequireDefault(_FilePlayer2);
 
@@ -45893,16 +45898,16 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 357 */
+/* 362 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(358);
+	var content = __webpack_require__(363);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(360)(content, {});
+	var update = __webpack_require__(365)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
@@ -45919,10 +45924,10 @@
 	}
 
 /***/ },
-/* 358 */
+/* 363 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(359)();
+	exports = module.exports = __webpack_require__(364)();
 	// imports
 
 
@@ -45933,7 +45938,7 @@
 
 
 /***/ },
-/* 359 */
+/* 364 */
 /***/ function(module, exports) {
 
 	/*
@@ -45989,7 +45994,7 @@
 
 
 /***/ },
-/* 360 */
+/* 365 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
