@@ -34265,9 +34265,11 @@
 	      startPosition: 0,
 	      played: 0
 	    };
+
 	    _this.socket = _socket2.default.connect(HOST);
 	    _this.getData = _this.getData.bind(_this);
 	    _this.formClick = _this.formClick.bind(_this);
+	    _this.thumbnailClick = _this.thumbnailClick.bind(_this);
 	    _this.handlePlayerEnd = _this.handlePlayerEnd.bind(_this);
 	    _this.adminOnPause = _this.adminOnPause.bind(_this);
 	    _this.adminOnPlay = _this.adminOnPlay.bind(_this);
@@ -34279,9 +34281,6 @@
 	    _this.syncWithAdmin = _this.syncWithAdmin.bind(_this);
 	    return _this;
 	  }
-	  /**
-	   * We GET our data here after each render
-	   */
 
 	  _createClass(QueueApp, [{
 	    key: 'onProgress',
@@ -34327,6 +34326,26 @@
 	        this.socket.emit('adminPlay', { room: this.props.params.roomName });
 	      }
 	    }
+	    /**
+	     * This is the callback for the Queue component to use in onClick.
+	     * It makes an ajax request to increase a video's vote by one when a thumbnail is clicked.
+	     */
+
+	  }, {
+	    key: 'thumbnailClick',
+	    value: function thumbnailClick(link) {
+	      var _this2 = this;
+
+	      $.ajax({
+	        url: HOST + '/increaseVote',
+	        type: "POST",
+	        data: JSON.stringify({ link: link }),
+	        contentType: "application/json; charset=utf-8",
+	        dataType: "json"
+	      }).done(function () {
+	        return _this2.socket.emit('votes');
+	      });
+	    }
 	  }, {
 	    key: 'adminOnPause',
 	    value: function adminOnPause() {
@@ -34346,10 +34365,14 @@
 	      console.log('pausing');
 	      this.setState({ playing: false });
 	    }
+	    /**
+	     * We GET our data here after each render
+	     */
+
 	  }, {
 	    key: 'getData',
 	    value: function getData() {
-	      var _this2 = this;
+	      var _this3 = this;
 
 	      if (this.state.video === '' && this.admin) {
 	        $.ajax({
@@ -34357,13 +34380,13 @@
 	          url: HOST + ('/getNextVideo/' + this.props.params.roomName),
 	          contentType: "application/json; charset=utf-8"
 	        }).done(function (response) {
-	          _this2.setState({ video: response });
-	          _this2.adminSendVid();
-	          _this2.socket.emit('refreshQueue', { room: _this2.props.params.roomName });
+	          _this3.setState({ video: response });
+	          _this3.adminSendVid();
+	          _this3.socket.emit('refreshQueue', { room: _this3.props.params.roomName });
 	        });
 	      } else {
 	        $.get(HOST + ('/queue/' + this.props.params.roomName)).done(function (data) {
-	          return _this2.setState({ queues: data });
+	          return _this3.setState({ queues: data });
 	        });
 	      }
 	    }
@@ -34379,7 +34402,7 @@
 	  }, {
 	    key: 'handlePlayerEnd',
 	    value: function handlePlayerEnd(event) {
-	      var _this3 = this;
+	      var _this4 = this;
 
 	      if (this.admin) {
 	        $.ajax({
@@ -34387,9 +34410,9 @@
 	          url: HOST + ('/getNextVideo/' + this.props.params.roomName),
 	          contentType: "application/json; charset=utf-8"
 	        }).done(function (response) {
-	          _this3.setState({ video: response });
-	          _this3.adminSendVid();
-	          _this3.socket.emit('refreshQueue', { room: _this3.props.params.roomName });
+	          _this4.setState({ video: response });
+	          _this4.adminSendVid();
+	          _this4.socket.emit('refreshQueue', { room: _this4.props.params.roomName });
 	        });
 	      }
 	    }
@@ -34401,7 +34424,7 @@
 	  }, {
 	    key: 'formClick',
 	    value: function formClick(link) {
-	      var _this4 = this;
+	      var _this5 = this;
 
 	      $.ajax({
 	        url: HOST + '/addToQueue',
@@ -34410,7 +34433,7 @@
 	        contentType: "application/json; charset=utf-8",
 	        dataType: "json"
 	      }).done(function () {
-	        return _this4.socket.emit('newdata');
+	        return _this5.socket.emit('newdata');
 	      });
 	    }
 	    /**
@@ -34438,7 +34461,7 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this5 = this;
+	      var _this6 = this;
 
 	      var videoUrl = void 0;
 	      if (this.state.video) {
@@ -34457,12 +34480,12 @@
 	        ),
 	        _react2.default.createElement(_Queueform2.default, { key: 'form-key', formClick: this.formClick }),
 	        _react2.default.createElement(_reactPlayer2.default, { id: 'youtube-component', ref: function ref(player) {
-	            _this5.player = player;
+	            _this6.player = player;
 	          },
 	          url: videoUrl, playing: this.state.playing, controls: true,
 	          onPlay: this.adminOnPlay, onPause: this.adminOnPause, onEnded: this.handlePlayerEnd,
 	          onProgress: this.onProgress, progressFrequency: 500, onReady: this.syncWithAdmin }),
-	        _react2.default.createElement(_Queuelist2.default, { queues: this.state.queues })
+	        _react2.default.createElement(_Queuelist2.default, { thumbnailClick: this.thumbnailClick, queues: this.state.queues })
 	      );
 	    }
 	  }]);
@@ -44195,10 +44218,13 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var Queue = function Queue(_ref) {
-	  var link = _ref.link;
+	  var link = _ref.link,
+	      thumbnailClick = _ref.thumbnailClick;
 
 	  // This interesting piece of string manipulation takes in a youtube url and turns it into a thumbnail url
-	  return _react2.default.createElement('img', { src: 'https://i.ytimg.com/vi/' + link.split('=')[1] + '/hqdefault.jpg' });
+	  return _react2.default.createElement('img', { className: 'images', onClick: function onClick() {
+	      return thumbnailClick(link);
+	    }, src: 'https://i.ytimg.com/vi/' + link.split('=')[1] + '/hqdefault.jpg' });
 	};
 
 	exports.default = Queue;
@@ -44270,16 +44296,17 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var QueueList = function QueueList(_ref) {
-	  var queues = _ref.queues;
+	  var thumbnailClick = _ref.thumbnailClick,
+	      queues = _ref.queues;
 
 	  // Create Queue component for URLs. Format validation moved to server.
-	  // Slice at 1 to avoid showing thumbnail for current video playing.
 	  var validUrls = queues.map(function (queue, index) {
-	    return _react2.default.createElement(_queue2.default, { key: index, link: queue });
+	    return _react2.default.createElement(_queue2.default, { thumbnailClick: thumbnailClick, key: index, link: queue });
 	  });
+
 	  return _react2.default.createElement(
 	    'div',
-	    null,
+	    { id: 'queueDiv' },
 	    validUrls
 	  );
 	};
@@ -44303,10 +44330,13 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var Queue = function Queue(_ref) {
-	  var link = _ref.link;
+	  var link = _ref.link,
+	      thumbnailClick = _ref.thumbnailClick;
 
 	  // This interesting piece of string manipulation takes in a youtube url and turns it into a thumbnail url
-	  return _react2.default.createElement('img', { src: 'https://i.ytimg.com/vi/' + link.split('=')[1] + '/hqdefault.jpg' });
+	  return _react2.default.createElement('img', { className: 'images', onClick: function onClick() {
+	      return thumbnailClick(link);
+	    }, src: 'https://i.ytimg.com/vi/' + link.split('=')[1] + '/hqdefault.jpg' });
 	};
 
 	exports.default = Queue;
