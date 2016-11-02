@@ -58,9 +58,11 @@
 
 	var _Layout2 = _interopRequireDefault(_Layout);
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	var _stylesheet = __webpack_require__(362);
 
-	__webpack_require__(362);
+	var _stylesheet2 = _interopRequireDefault(_stylesheet);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	_reactDom2.default.render(_react2.default.createElement(_Layout2.default, null), document.getElementById('App'));
 
@@ -26444,19 +26446,11 @@
 
 	    var _this = _possibleConstructorReturn(this, (Home.__proto__ || Object.getPrototypeOf(Home)).call(this));
 
-	    _this.socket = _socket2.default.connect(HOST);
-
-	    _this.createRoom = _this.createRoom.bind(_this);
-	    _this.joinRoom = _this.joinRoom.bind(_this);
-	    return _this;
-	  }
-
-	  _createClass(Home, [{
-	    key: 'createRoom',
-	    value: function createRoom(clickEvent) {
+	    _this.createRoom = function (clickEvent) {
 	      clickEvent.preventDefault();
 	      var form = document.forms.createRoom;
 	      var roomName = form.roomToCreate.value;
+
 	      $.ajax({
 	        type: "POST",
 	        url: HOST + "/createRoom",
@@ -26468,18 +26462,23 @@
 	      }).fail(function () {
 	        return alert('room name taken');
 	      });
+
 	      form.roomToCreate.value = '';
-	    }
-	  }, {
-	    key: 'joinRoom',
-	    value: function joinRoom(clickEvent) {
+	    };
+
+	    _this.joinRoom = function (clickEvent) {
 	      clickEvent.preventDefault();
 	      var form = document.forms.joinRoom;
 	      var roomName = form.roomToJoin.value;
-	      this.socket.emit('room', { roomName: roomName });
+	      _this.socket.emit('room', { roomName: roomName });
 	      form.roomToJoin.value = '';
-	    }
-	  }, {
+	    };
+
+	    _this.socket = _socket2.default.connect(HOST);
+	    return _this;
+	  }
+
+	  _createClass(Home, [{
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      this.socket.on('joiningRoom', function (_ref) {
@@ -26504,7 +26503,7 @@
 	        _react2.default.createElement(
 	          'form',
 	          { name: 'createRoom' },
-	          _react2.default.createElement('input', { id: 'roomToCreate', type: 'text', name: 'roomToCreate', autofocus: true }),
+	          _react2.default.createElement('input', { id: 'roomToCreate', type: 'text', name: 'roomToCreate' }),
 	          _react2.default.createElement(
 	            'button',
 	            { id: 'create-room', onClick: this.createRoom },
@@ -34258,6 +34257,117 @@
 
 	    var _this = _possibleConstructorReturn(this, (QueueApp.__proto__ || Object.getPrototypeOf(QueueApp)).call(this, props));
 
+	    _this.onProgress = function (_ref) {
+	      var played = _ref.played;
+
+	      var position = parseFloat(played);
+	      _this.setState({ played: position });
+	      console.log(_this.state.played);
+	    };
+
+	    _this.userIsAdmin = function () {
+	      return Boolean(localStorage.getItem('admin' + _this.props.params.roomName));
+	    };
+
+	    _this.setCurrentVideo = function (_ref2) {
+	      var url = _ref2.url,
+	          start = _ref2.start;
+
+	      console.log('received url', url);
+	      _this.setState({ video: url, startPosition: start });
+	    };
+
+	    _this.adminSendVid = function () {
+	      console.log('adminsendvid');
+	      console.log(_this.admin);
+	      if (_this.admin) {
+	        console.log('sending vid url to new user');
+	        _this.socket.emit('currentVideo', {
+	          room: _this.props.params.roomName,
+	          url: _this.state.video,
+	          start: _this.state.played
+	        });
+	      }
+	    };
+
+	    _this.adminOnPlay = function () {
+	      if (_this.admin) _this.socket.emit('adminPlay', { room: _this.props.params.roomName });
+	    };
+
+	    _this.adminOnPause = function () {
+	      if (_this.admin) _this.socket.emit('adminPause', { room: _this.props.params.roomName });
+	    };
+
+	    _this.thumbnailClick = function (link) {
+	      $.ajax({
+	        url: HOST + '/increaseVote',
+	        type: "POST",
+	        data: JSON.stringify({ link: link, room: _this.props.params.roomName }),
+	        contentType: "application/json; charset=utf-8",
+	        dataType: "json"
+	      }).done(function () {
+	        return _this.socket.emit('refreshQueue', { room: _this.props.params.roomName });
+	      });
+	    };
+
+	    _this.playVideo = function () {
+	      console.log('playing video');
+	      _this.setState({ playing: true });
+	    };
+
+	    _this.pauseVideo = function () {
+	      console.log('pausing');
+	      _this.setState({ playing: false });
+	    };
+
+	    _this.getData = function () {
+	      if (_this.state.video === '' && _this.admin) {
+	        $.ajax({
+	          type: "GET",
+	          url: HOST + ('/getNextVideo/' + _this.props.params.roomName),
+	          contentType: "application/json; charset=utf-8"
+	        }).done(function (response) {
+	          _this.setState({ video: response });
+	          _this.adminSendVid();
+	          _this.socket.emit('refreshQueue', { room: _this.props.params.roomName });
+	        });
+	      } else {
+	        $.get(HOST + ('/queue/' + _this.props.params.roomName)).done(function (data) {
+	          return _this.setState({ queues: data });
+	        });
+	      }
+	    };
+
+	    _this.syncWithAdmin = function () {
+	      if (!_this.admin) _this.player.seekTo(_this.state.startPosition);
+	    };
+
+	    _this.handlePlayerEnd = function (event) {
+	      if (_this.admin) {
+	        $.ajax({
+	          type: "GET",
+	          url: HOST + ('/getNextVideo/' + _this.props.params.roomName),
+	          contentType: "application/json; charset=utf-8"
+	        }).done(function (response) {
+	          _this.setState({ video: response });
+	          _this.adminSendVid();
+	          _this.socket.emit('refreshQueue', { room: _this.props.params.roomName });
+	        });
+	      }
+	    };
+
+	    _this.formClick = function (link) {
+	      $.ajax({
+	        url: HOST + '/addToQueue',
+	        type: "POST",
+	        data: JSON.stringify({ link: link, room: _this.props.params.roomName }),
+	        contentType: "application/json; charset=utf-8",
+	        dataType: "json"
+	      }).done(function () {
+	        return _this.socket.emit('newdata');
+	      });
+	    };
+
 	    _this.state = {
 	      queues: [],
 	      video: '',
@@ -34267,187 +34377,38 @@
 	    };
 
 	    _this.socket = _socket2.default.connect(HOST);
-	    _this.getData = _this.getData.bind(_this);
-	    _this.formClick = _this.formClick.bind(_this);
-	    _this.thumbnailClick = _this.thumbnailClick.bind(_this);
-	    _this.handlePlayerEnd = _this.handlePlayerEnd.bind(_this);
-	    _this.adminOnPause = _this.adminOnPause.bind(_this);
-	    _this.adminOnPlay = _this.adminOnPlay.bind(_this);
-	    _this.adminSendVid = _this.adminSendVid.bind(_this);
-	    _this.setCurrentVideo = _this.setCurrentVideo.bind(_this);
-	    _this.pauseVideo = _this.pauseVideo.bind(_this);
-	    _this.playVideo = _this.playVideo.bind(_this);
-	    _this.onProgress = _this.onProgress.bind(_this);
-	    _this.syncWithAdmin = _this.syncWithAdmin.bind(_this);
 	    return _this;
 	  }
+	  /**
+	   * This is the callback for the Queue component to use in onClick.
+	   * It makes an ajax request to increase a video's vote by one when a thumbnail is clicked.
+	   */
+
+	  /**
+	   * We GET our data here after each render
+	   */
+
+	  /**
+	   * TODO: get access to url that the admin wants to remove
+	   */
+
+	  /**
+	   * This is the callback for the form component to use in onClick.
+	   * It makes an ajax request to add a new link when the submit button is clicked.
+	   */
 
 	  _createClass(QueueApp, [{
-	    key: 'onProgress',
-	    value: function onProgress(_ref) {
-	      var played = _ref.played;
+	    key: 'componentDidMount',
 
-	      var position = parseFloat(played);
-	      this.setState({ played: position });
-	      console.log(this.state.played);
-	    }
-	  }, {
-	    key: 'userIsAdmin',
-	    value: function userIsAdmin() {
-	      return Boolean(localStorage.getItem('admin' + this.props.params.roomName));
-	    }
-	  }, {
-	    key: 'setCurrentVideo',
-	    value: function setCurrentVideo(_ref2) {
-	      var url = _ref2.url,
-	          start = _ref2.start;
-
-	      console.log('received url', url);
-	      this.setState({ video: url, startPosition: start });
-	    }
-	  }, {
-	    key: 'adminSendVid',
-	    value: function adminSendVid() {
-	      console.log('adminsendvid');
-	      console.log(this.admin);
-	      if (this.admin) {
-	        console.log('sending vid url to new user');
-	        this.socket.emit('currentVideo', {
-	          room: this.props.params.roomName,
-	          url: this.state.video,
-	          start: this.state.played
-	        });
-	      }
-	    }
-	  }, {
-	    key: 'adminOnPlay',
-	    value: function adminOnPlay() {
-	      if (this.admin) {
-	        this.socket.emit('adminPlay', { room: this.props.params.roomName });
-	      }
-	    }
-	    /**
-	     * This is the callback for the Queue component to use in onClick.
-	     * It makes an ajax request to increase a video's vote by one when a thumbnail is clicked.
-	     */
-
-	  }, {
-	    key: 'thumbnailClick',
-	    value: function thumbnailClick(link) {
-	      var _this2 = this;
-
-	      $.ajax({
-	        url: HOST + '/increaseVote',
-	        type: "POST",
-	        data: JSON.stringify({ link: link }),
-	        contentType: "application/json; charset=utf-8",
-	        dataType: "json"
-	      }).done(function () {
-	        return _this2.socket.emit('votes');
-	      });
-	    }
-	  }, {
-	    key: 'adminOnPause',
-	    value: function adminOnPause() {
-	      if (this.admin) {
-	        this.socket.emit('adminPause', { room: this.props.params.roomName });
-	      }
-	    }
-	  }, {
-	    key: 'playVideo',
-	    value: function playVideo() {
-	      console.log('playing video');
-	      this.setState({ playing: true });
-	    }
-	  }, {
-	    key: 'pauseVideo',
-	    value: function pauseVideo() {
-	      console.log('pausing');
-	      this.setState({ playing: false });
-	    }
-	    /**
-	     * We GET our data here after each render
-	     */
-
-	  }, {
-	    key: 'getData',
-	    value: function getData() {
-	      var _this3 = this;
-
-	      if (this.state.video === '' && this.admin) {
-	        $.ajax({
-	          type: "GET",
-	          url: HOST + ('/getNextVideo/' + this.props.params.roomName),
-	          contentType: "application/json; charset=utf-8"
-	        }).done(function (response) {
-	          _this3.setState({ video: response });
-	          _this3.adminSendVid();
-	          _this3.socket.emit('refreshQueue', { room: _this3.props.params.roomName });
-	        });
-	      } else {
-	        $.get(HOST + ('/queue/' + this.props.params.roomName)).done(function (data) {
-	          return _this3.setState({ queues: data });
-	        });
-	      }
-	    }
-	  }, {
-	    key: 'syncWithAdmin',
-	    value: function syncWithAdmin() {
-	      if (!this.admin) this.player.seekTo(this.state.startPosition);
-	    }
-	    /**
-	     * TODO: get access to url that the admin wants to remove
-	     */
-
-	  }, {
-	    key: 'handlePlayerEnd',
-	    value: function handlePlayerEnd(event) {
-	      var _this4 = this;
-
-	      if (this.admin) {
-	        $.ajax({
-	          type: "GET",
-	          url: HOST + ('/getNextVideo/' + this.props.params.roomName),
-	          contentType: "application/json; charset=utf-8"
-	        }).done(function (response) {
-	          _this4.setState({ video: response });
-	          _this4.adminSendVid();
-	          _this4.socket.emit('refreshQueue', { room: _this4.props.params.roomName });
-	        });
-	      }
-	    }
-	    /**
-	     * This is the callback for the form component to use in onClick.
-	     * It makes an ajax request to add a new link when the submit button is clicked.
-	     */
-
-	  }, {
-	    key: 'formClick',
-	    value: function formClick(link) {
-	      var _this5 = this;
-
-	      $.ajax({
-	        url: HOST + '/addToQueue',
-	        type: "POST",
-	        data: JSON.stringify({ link: link, room: this.props.params.roomName }),
-	        contentType: "application/json; charset=utf-8",
-	        dataType: "json"
-	      }).done(function () {
-	        return _this5.socket.emit('newdata');
-	      });
-	    }
 	    /**
 	     * This is where the listeners for this.socket go.
 	     * on[newData] -> Implies there is a change in data on the backend.
 	     *                The callback will make a GET request and update state
 	     *                with the new list of Youtube URLs.
-	     * on[joiningRoom] -> Implies someone has created a room.
-	     *                    The callback will update our roomName in the constructor
-	     *                    with the input value typed into the Home createRoom form.
+	     * on[room] -> Implies someone has created a room.
+	     *             The callback will update our roomName in the constructor
+	     *             with the input value typed into the Home createRoom form.
 	     */
-
-	  }, {
-	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      this.getData();
 	      this.admin = this.userIsAdmin();
@@ -34461,7 +34422,7 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this6 = this;
+	      var _this2 = this;
 
 	      var videoUrl = void 0;
 	      if (this.state.video) {
@@ -34471,21 +34432,25 @@
 
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'youtube-wrapper' },
+	        null,
 	        _react2.default.createElement(
 	          'h1',
 	          null,
-	          'Welcome to QTube! Your room is: ',
+	          'Room: ',
 	          this.props.params.roomName
 	        ),
 	        _react2.default.createElement(_Queueform2.default, { key: 'form-key', formClick: this.formClick }),
-	        _react2.default.createElement(_reactPlayer2.default, { id: 'youtube-component', ref: function ref(player) {
-	            _this6.player = player;
-	          },
-	          url: videoUrl, playing: this.state.playing, controls: true,
-	          onPlay: this.adminOnPlay, onPause: this.adminOnPause, onEnded: this.handlePlayerEnd,
-	          onProgress: this.onProgress, progressFrequency: 500, onReady: this.syncWithAdmin }),
-	        _react2.default.createElement(_Queuelist2.default, { thumbnailClick: this.thumbnailClick, queues: this.state.queues })
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'youtube-wrapper' },
+	          _react2.default.createElement(_reactPlayer2.default, { id: 'youtube-component', ref: function ref(player) {
+	              _this2.player = player;
+	            },
+	            url: videoUrl, playing: this.state.playing, controls: true,
+	            onPlay: this.adminOnPlay, onPause: this.adminOnPause, onEnded: this.handlePlayerEnd,
+	            onProgress: this.onProgress, progressFrequency: 500, onReady: this.syncWithAdmin }),
+	          _react2.default.createElement(_Queuelist2.default, { thumbnailClick: this.thumbnailClick, queues: this.state.queues })
+	        )
 	      );
 	    }
 	  }]);
@@ -44211,21 +44176,56 @@
 	  value: true
 	});
 
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 	var _react = __webpack_require__(1);
 
 	var _react2 = _interopRequireDefault(_react);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var Queue = function Queue(_ref) {
-	  var link = _ref.link,
-	      thumbnailClick = _ref.thumbnailClick;
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	  // This interesting piece of string manipulation takes in a youtube url and turns it into a thumbnail url
-	  return _react2.default.createElement('img', { className: 'images', onClick: function onClick() {
-	      return thumbnailClick(link);
-	    }, src: 'https://i.ytimg.com/vi/' + link.split('=')[1] + '/hqdefault.jpg' });
-	};
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	// Although Queue is stateless, FlipMove requires class for ref
+	var Queue = function (_Component) {
+	  _inherits(Queue, _Component);
+
+	  function Queue(props) {
+	    _classCallCheck(this, Queue);
+
+	    return _possibleConstructorReturn(this, (Queue.__proto__ || Object.getPrototypeOf(Queue)).call(this, props));
+	  }
+
+	  // For src: this interesting piece of string manipulation takes in a youtube url and turns it into a thumbnail
+
+
+	  _createClass(Queue, [{
+	    key: 'render',
+	    value: function render() {
+	      var _this2 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement('img', { className: 'images', onDoubleClick: function onDoubleClick() {
+	            return _this2.props.thumbnailClick(_this2.props.link);
+	          }, src: 'https://i.ytimg.com/vi/' + this.props.link.split('=')[1] + '/hqdefault.jpg' }),
+	        ';',
+	        _react2.default.createElement(
+	          'p',
+	          null,
+	          this.props.score
+	        )
+	      );
+	    }
+	  }]);
+
+	  return Queue;
+	}(_react.Component);
 
 	exports.default = Queue;
 
@@ -44253,13 +44253,13 @@
 	   * to make the ajax request and clear the form.
 	   * preventDefault is used to prevent a page refresh.
 	   */
-	  function handleClick(e) {
-	    e.preventDefault();
+	  var handleClick = function handleClick(clickEvent) {
+	    clickEvent.preventDefault();
 	    var form = document.forms.addLink;
 	    var link = form.link;
 	    formClick(link.value);
 	    link.value = '';
-	  }
+	  };
 
 	  return _react2.default.createElement(
 	    'form',
@@ -44293,6 +44293,10 @@
 
 	var _queue2 = _interopRequireDefault(_queue);
 
+	var _reactFlipMove = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"react-flip-move\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+
+	var _reactFlipMove2 = _interopRequireDefault(_reactFlipMove);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var QueueList = function QueueList(_ref) {
@@ -44300,14 +44304,19 @@
 	      queues = _ref.queues;
 
 	  // Create Queue component for URLs. Format validation moved to server.
-	  var validUrls = queues.map(function (queue, index) {
-	    return _react2.default.createElement(_queue2.default, { thumbnailClick: thumbnailClick, key: index, link: queue });
+	  var validUrls = queues.map(function (queue) {
+	    return _react2.default.createElement(_queue2.default, { thumbnailClick: thumbnailClick, key: queue.url,
+	      link: queue.url, score: queue.score });
 	  });
 
 	  return _react2.default.createElement(
 	    'div',
 	    { id: 'queueDiv' },
-	    validUrls
+	    _react2.default.createElement(
+	      _reactFlipMove2.default,
+	      { easing: 'cubic-bezier(0, 0.7, 0.8, 0.1)' },
+	      validUrls
+	    )
 	  );
 	};
 
@@ -44323,21 +44332,56 @@
 	  value: true
 	});
 
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 	var _react = __webpack_require__(1);
 
 	var _react2 = _interopRequireDefault(_react);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var Queue = function Queue(_ref) {
-	  var link = _ref.link,
-	      thumbnailClick = _ref.thumbnailClick;
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	  // This interesting piece of string manipulation takes in a youtube url and turns it into a thumbnail url
-	  return _react2.default.createElement('img', { className: 'images', onClick: function onClick() {
-	      return thumbnailClick(link);
-	    }, src: 'https://i.ytimg.com/vi/' + link.split('=')[1] + '/hqdefault.jpg' });
-	};
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	// Although Queue is stateless, FlipMove requires class for ref
+	var Queue = function (_Component) {
+	  _inherits(Queue, _Component);
+
+	  function Queue(props) {
+	    _classCallCheck(this, Queue);
+
+	    return _possibleConstructorReturn(this, (Queue.__proto__ || Object.getPrototypeOf(Queue)).call(this, props));
+	  }
+
+	  // For src: this interesting piece of string manipulation takes in a youtube url and turns it into a thumbnail
+
+
+	  _createClass(Queue, [{
+	    key: 'render',
+	    value: function render() {
+	      var _this2 = this;
+
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement('img', { className: 'images', onDoubleClick: function onDoubleClick() {
+	            return _this2.props.thumbnailClick(_this2.props.link);
+	          }, src: 'https://i.ytimg.com/vi/' + this.props.link.split('=')[1] + '/hqdefault.jpg' }),
+	        ';',
+	        _react2.default.createElement(
+	          'p',
+	          null,
+	          this.props.score
+	        )
+	      );
+	    }
+	  }]);
+
+	  return Queue;
+	}(_react.Component);
 
 	exports.default = Queue;
 
@@ -45932,7 +45976,7 @@
 
 
 	// module
-	exports.push([module.id, "   html {\n      margin: 0;\n      padding: 0;\n      border: 0;\n    }\n    body {\n      font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;\n      line-height: 1.4em;\n      background: #f5f5f5;\n      color: #4d4d4d;\n      min-width: 230px;\n      max-width: 550px;\n      margin: 0 auto;\n      -webkit-font-smoothing: antialiased;\n      font-weight: 300;\n    }\n    h1 {\n      display: block;\n      margin: 50 auto;\n      width: 600px;\n      font-size: 30px;\n    }\n    #Qtube {\n      display: block;\n      margin: 0 auto;\n      width: 250px;\n      margin-top: 100px;\n      font-size: 80px;\n    }\n    #youtube-component {\n      width: 600px;\n      margin: 50px auto;\n      display: block;\n    }\n    .youtube-wrapper {\n      margin: auto;\n      left: 0;\n      right: 0;\n    }\nbutton {\n   border-top: 1px solid #f7979f;\n   background: #ff0000;\n   background: -webkit-gradient(linear, left top, left bottom, from(#9c3e3e), to(#ff0000));\n   background: -webkit-linear-gradient(top, #9c3e3e, #ff0000);\n   background: -moz-linear-gradient(top, #9c3e3e, #ff0000);\n   background: -ms-linear-gradient(top, #9c3e3e, #ff0000);\n   background: -o-linear-gradient(top, #9c3e3e, #ff0000);\n   padding: 14px 28px;\n   -webkit-border-radius: 11px;\n   -moz-border-radius: 11px;\n   border-radius: 11px;\n   -webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;\n   -moz-box-shadow: rgba(0,0,0,1) 0 1px 0;\n   box-shadow: rgba(0,0,0,1) 0 1px 0;\n   text-shadow: rgba(0,0,0,.4) 0 1px 0;\n   color: white;\n   font-size: 24px;\n   font-family: Georgia, Serif;\n   text-decoration: none;\n   vertical-align: middle;\n   margin: 0 auto;\n   width: 300px;\n   display: block;\n   }\nbutton:hover {\n   border-top-color: #f7000c;\n   background: #f7000c;\n   color: #ffffff;\n   }\nbutton:active {\n   border-top-color: #ff0000;\n   background: #ff0000;\n   }\n   input {\n     outline: none;\n     display: block;\n     margin: 0 auto;\n     width: 300px;\n     height: 50px;\n     font-size: 40px;\n     border: 1px solid #d0d0d0;\n     border-radius: 5px;\n   }\n   #roomToCreate, #roomToJoin {\n     margin-top: 100px;\n   }\n   #create-room, #join-room {\n     margin-top: 10px;\n   }", ""]);
+	exports.push([module.id, "   html {\n      margin: 0;\n      padding: 0;\n      border: 0;\n    }\n    body {\n      font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;\n      line-height: 1.4em;\n      background: #f5f5f5;\n      color: #4d4d4d;\n      min-width: 230px;\n      max-width: 550px;\n      margin: 0 auto;\n      -webkit-font-smoothing: antialiased;\n      font-weight: 300;\n    }\n    h1 {\n      display: block;\n      margin: 50 auto;\n      width: 600px;\n      font-size: 30px;\n    }\n    #Qtube {\n      display: block;\n      margin: 0 auto;\n      width: 250px;\n      margin-top: 100px;\n      font-size: 80px;\n    }\n    #youtube-component {\n      width: 600px;\n      margin: 50px auto;\n      display: block;\n    }\n    .youtube-wrapper {\n      margin: auto;\n      left: 0;\n      right: 0;\n    }\nbutton {\n   border-top: 1px solid #f7979f;\n   background: #ff0000;\n   background: -webkit-gradient(linear, left top, left bottom, from(#9c3e3e), to(#ff0000));\n   background: -webkit-linear-gradient(top, #9c3e3e, #ff0000);\n   background: -moz-linear-gradient(top, #9c3e3e, #ff0000);\n   background: -ms-linear-gradient(top, #9c3e3e, #ff0000);\n   background: -o-linear-gradient(top, #9c3e3e, #ff0000);\n   padding: 14px 28px;\n   -webkit-border-radius: 11px;\n   -moz-border-radius: 11px;\n   border-radius: 11px;\n   -webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;\n   -moz-box-shadow: rgba(0,0,0,1) 0 1px 0;\n   box-shadow: rgba(0,0,0,1) 0 1px 0;\n   text-shadow: rgba(0,0,0,.4) 0 1px 0;\n   color: white;\n   font-size: 24px;\n   font-family: Georgia, Serif;\n   text-decoration: none;\n   vertical-align: middle;\n   margin: 0 auto;\n   width: 300px;\n   display: block;\n   }\nbutton:hover {\n   border-top-color: #f7000c;\n   background: #f7000c;\n   color: #ffffff;\n   }\nbutton:active {\n   border-top-color: #ff0000;\n   background: #ff0000;\n   }\n   input {\n     outline: none;\n     display: block;\n     margin: 0 auto;\n     width: 300px;\n     height: 50px;\n     font-size: 40px;\n     border: 1px solid #d0d0d0;\n     border-radius: 5px;\n   }\n   #roomToCreate, #roomToJoin {\n     margin-top: 100px;\n   }\n   #create-room, #join-room {\n     margin-top: 10px;\n   }\n=======\nhtml {\n  margin: 0;\n  padding: 0;\n  border: 0;\n}\nbody {\n  font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;\n  line-height: 1.4em;\n  background: #f5f5f5;\n  color: #4d4d4d;\n  min-width: 230px;\n  max-width: 100%;\n  margin: 0 auto;\n  -webkit-font-smoothing: antialiased;\n  font-weight: 300;\n}\nh1 {\n  text-align: center;\n  display: block;\n  margin: 0 auto;\n  left: 0;\n  right: 0;\n  margin-top: 100px;\n  font-size: 80px;\n}\n#youtube-component {\n  width: 640px;\n  margin: 50px auto;\n  display: block;\n}\n.youtube-wrapper {\n  margin: auto;\n  width: 640px;\n  left: 0;\n  right: 0;\n}\n.images {\n  width: 150px;\n  height: 150px;\n  margin: 10px 10px 0 0;\n}\n#queueDiv {\n  width: 600px;\n  height: 1000px;\n}\nbutton {\n  border-top: 1px solid #f7979f;\n  background: #ff0000;\n  background: -webkit-gradient(linear, left top, left bottom, from(#9c3e3e), to(#ff0000));\n  background: -webkit-linear-gradient(top, #9c3e3e, #ff0000);\n  background: -moz-linear-gradient(top, #9c3e3e, #ff0000);\n  background: -ms-linear-gradient(top, #9c3e3e, #ff0000);\n  background: -o-linear-gradient(top, #9c3e3e, #ff0000);\n  padding: 14px 28px;\n  -webkit-border-radius: 11px;\n  -moz-border-radius: 11px;\n  border-radius: 11px;\n  -webkit-box-shadow: rgba(0,0,0,1) 0 1px 0;\n  -moz-box-shadow: rgba(0,0,0,1) 0 1px 0;\n  box-shadow: rgba(0,0,0,1) 0 1px 0;\n  text-shadow: rgba(0,0,0,.4) 0 1px 0;\n  color: white;\n  font-size: 24px;\n  font-family: Georgia, Serif;\n  text-decoration: none;\n  vertical-align: middle;\n  margin: 10px auto;\n  width: 300px;\n  display: block;\n}\nbutton:hover {\n  border-top-color: #f7000c;\n  background: #f7000c;\n  color: #ffffff;\n}\nbutton:active {\n  border-top-color: #ff0000;\n  background: #ff0000;\n}\ninput {\n  outline: none;\n  display: block;\n  margin: 100px auto 0;\n  width: 300px;\n  height: 50px;\n  font-size: 40px;\n  border: 1px solid #d0d0d0;\n  border-radius: 5px;\n}", ""]);
 
 	// exports
 
